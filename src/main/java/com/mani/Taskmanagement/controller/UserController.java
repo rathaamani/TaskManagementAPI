@@ -1,7 +1,11 @@
 package com.mani.Taskmanagement.controller;
 
+import com.mani.Taskmanagement.VO.LoginRequestVO;
 import com.mani.Taskmanagement.model.User;
+import com.mani.Taskmanagement.repository.UserRepository;
 import com.mani.Taskmanagement.service.UserService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,9 +17,13 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
+    private final UserRepository userRepository;
+    private final HttpServletResponse response;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, UserRepository userRepository, HttpServletResponse response) {
         this.userService = userService;
+        this.userRepository = userRepository;
+        this.response = response;
     }
 
     @PostMapping
@@ -38,4 +46,25 @@ public class UserController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> authenticateUser(@RequestBody LoginRequestVO loginRequest) {
+        // Perform authentication
+        String username = loginRequest.getUsername();
+        String password = loginRequest.getPassword();
+
+        // Simple authentication logic
+        User user = userRepository.findByUsername(username);
+
+        // Validate the user's credentials
+        if (user != null && password.equals(user.getPassword())) {
+            // Add username to a cookie
+            Cookie cookie = new Cookie("username", username);
+            cookie.setMaxAge(24 * 60 * 60); // Cookie valid for 1 day (in seconds)
+            response.addCookie(cookie);
+
+            return new ResponseEntity<>("Login successful", HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>("Invalid credentials", HttpStatus.UNAUTHORIZED);
+        }}
 }
