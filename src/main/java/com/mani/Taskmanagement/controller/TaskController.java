@@ -1,9 +1,13 @@
 package com.mani.Taskmanagement.controller;
 
+import com.mani.Taskmanagement.VO.TaskRequest;
 import com.mani.Taskmanagement.model.Task;
+import com.mani.Taskmanagement.model.UserType;
 import com.mani.Taskmanagement.service.TaskService;
+import com.mani.Taskmanagement.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,22 +19,32 @@ import java.util.List;
 public class TaskController {
 
     private final TaskService taskService;
+    private final UserService userService;
 
     @Autowired
-    public TaskController(TaskService taskService) {
+    public TaskController(TaskService taskService, UserService userService) {
         this.taskService = taskService;
+        this.userService = userService;
     }
 
-    @GetMapping
-    public ResponseEntity<?> getAllTasks(@CookieValue(value = "username", defaultValue = "") String currentUser) {
+    @PostMapping
+    public ResponseEntity<?> getAllTasks(@CookieValue(value = "username", defaultValue = "") String currentUser,
+                                         @RequestBody TaskRequest taskRequest) {
         if (currentUser.isEmpty()) {
             // Handle the case where the username cookie is not present or empty
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("{\"message\":\"Unauthorized Access. Please login and try again!\"}");
         }
-        List<Task> tasks = taskService.getTasksForUser(currentUser);
-
-        // Return the tasks as a response
+        //check the userType
+        UserType userType = userService.getUserType(currentUser);
+        Page<Task> tasks;
+        if(userType == UserType.ADMIN){
+            tasks = taskService.getAllTasks(taskRequest);
+        }
+        else{
+            tasks = taskService.getTasksForUser(currentUser,taskRequest);
+        }
         return ResponseEntity.ok(tasks);
+
     }
 
     @GetMapping("/{taskId}")
@@ -43,7 +57,7 @@ public class TaskController {
         }
     }
 
-    @PostMapping
+    @PostMapping("/createTask")
     public ResponseEntity<?>createTask(@RequestBody Task task, @CookieValue(value = "username", defaultValue = "") String currentUser, HttpServletResponse response) {
         if (currentUser.isEmpty()) {
             // Handle the case where the username cookie is not present or empty
@@ -61,8 +75,8 @@ public class TaskController {
     }
 
     @PutMapping("/{title}")
-    public ResponseEntity<?> updateTask(@PathVariable String taskId, @RequestBody Task updatedTask) {
-        Task task = taskService.updateTask(taskId, updatedTask);
+    public ResponseEntity<?> updateTask(@PathVariable String title, @RequestBody Task updatedTask) {
+        Task task = taskService.updateTask(title, updatedTask);
         if (task != null) {
             return new ResponseEntity<>(task, HttpStatus.OK);
         } else {

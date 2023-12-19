@@ -65,4 +65,10 @@ public class UserService implements UserDetailsService {
                 user.getPassword(),
                 authorities
         );
-}}
+}
+
+    public UserType getUserType(String currentUser) {
+        User user = userRepository.findByUsername(currentUser);
+        return user.getUsertype();
+    }
+}
