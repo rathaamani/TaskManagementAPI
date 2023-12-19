@@ -56,15 +56,23 @@ public class UserController {
         // Simple authentication logic
         User user = userRepository.findByUsername(username);
 
-        // Validate the user's credentials
-        if (user != null && password.equals(user.getPassword())) {
-            // Add username to a cookie
-            Cookie cookie = new Cookie("username", username);
-            cookie.setMaxAge(24 * 60 * 60); // Cookie valid for 1 day (in seconds)
-            response.addCookie(cookie);
+        if(user == null){
+            return new ResponseEntity<>("User Does not exist. Please check the username", HttpStatus.UNAUTHORIZED);
+        }
 
-            return new ResponseEntity<>("Login successful", HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>("Invalid credentials", HttpStatus.UNAUTHORIZED);
-        }}
+        // Validate the user's credentials
+        else{
+
+            if (user != null && password.equals(user.getPassword())) {
+                // Add username to a cookie
+                Cookie cookie = new Cookie("username", username);
+                cookie.setMaxAge(24 * 60 * 60); // Cookie valid for 1 day (in seconds)
+                response.addCookie(cookie);
+
+                return new ResponseEntity<>("Login successful", HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>("Invalid credentials", HttpStatus.UNAUTHORIZED);
+            }
+        }
+    }
 }

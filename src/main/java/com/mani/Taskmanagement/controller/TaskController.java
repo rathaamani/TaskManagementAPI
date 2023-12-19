@@ -87,9 +87,9 @@ public class TaskController {
     @DeleteMapping("/{title}")
     public ResponseEntity<String> deleteTask(@PathVariable String title) {
         if (taskService.deleteTask(title)) {
-            return new ResponseEntity<>("Task deleted successfully", HttpStatus.NO_CONTENT);
+            return ResponseEntity.status(HttpStatus.OK).body("{\"message\":\"Task '" + title + "' deleted successfully\"}");
         } else {
-            return new ResponseEntity<>("Task not found or unable to delete", HttpStatus.NOT_FOUND);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("{\"message\":\"Task '" + title + "' is not Present\"}");
         }
     }
 }
