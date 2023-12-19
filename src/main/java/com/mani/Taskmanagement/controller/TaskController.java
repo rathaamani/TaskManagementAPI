@@ -22,17 +22,15 @@ public class TaskController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Task>> getAllTasks(@CookieValue(value = "username", defaultValue = "") String currentUser) {
+    public ResponseEntity<?> getAllTasks(@CookieValue(value = "username", defaultValue = "") String currentUser) {
         if (currentUser.isEmpty()) {
             // Handle the case where the username cookie is not present or empty
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("{\"message\":\"Unauthorized Access. Please login and try again!\"}");
         }
-
-        // Use the username in your business logic (e.g., retrieve tasks associated with this username)
         List<Task> tasks = taskService.getTasksForUser(currentUser);
 
         // Return the tasks as a response
-        return new ResponseEntity<>(tasks, HttpStatus.OK);
+        return ResponseEntity.ok(tasks);
     }
 
     @GetMapping("/{taskId}")
@@ -46,10 +44,10 @@ public class TaskController {
     }
 
     @PostMapping
-    public ResponseEntity<Task> createTask(@RequestBody Task task, @CookieValue(value = "username", defaultValue = "") String currentUser, HttpServletResponse response) {
+    public ResponseEntity<?>createTask(@RequestBody Task task, @CookieValue(value = "username", defaultValue = "") String currentUser, HttpServletResponse response) {
         if (currentUser.isEmpty()) {
             // Handle the case where the username cookie is not present or empty
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("{\"message\":\"Unauthorized Access. Please login and try again!\"}");
         }
 
         // Set the createdBy field of the task with the username obtained from the cookie
@@ -62,22 +60,22 @@ public class TaskController {
         return new ResponseEntity<>(createdTask, HttpStatus.CREATED);
     }
 
-    @PutMapping("/{taskId}")
-    public ResponseEntity<Task> updateTask(@PathVariable String taskId, @RequestBody Task updatedTask) {
+    @PutMapping("/{title}")
+    public ResponseEntity<?> updateTask(@PathVariable String taskId, @RequestBody Task updatedTask) {
         Task task = taskService.updateTask(taskId, updatedTask);
         if (task != null) {
             return new ResponseEntity<>(task, HttpStatus.OK);
         } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("No Task to update.Please check the ID", HttpStatus.NOT_FOUND);
         }
     }
 
-    @DeleteMapping("/{taskId}")
-    public ResponseEntity<Void> deleteTask(@PathVariable String taskId) {
-        if (taskService.deleteTask(taskId)) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    @DeleteMapping("/{title}")
+    public ResponseEntity<String> deleteTask(@PathVariable String title) {
+        if (taskService.deleteTask(title)) {
+            return new ResponseEntity<>("Task deleted successfully", HttpStatus.NO_CONTENT);
         } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("Task not found or unable to delete", HttpStatus.NOT_FOUND);
         }
     }
 }

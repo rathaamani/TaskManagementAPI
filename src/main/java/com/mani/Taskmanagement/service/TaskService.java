@@ -45,9 +45,9 @@ public class TaskService {
         }
     }
 
-    public boolean deleteTask(String taskId) {
-        if (taskRepository.existsById(taskId)) {
-            taskRepository.deleteById(taskId);
+    public boolean deleteTask(String taskTitle) {
+        if (taskRepository.existsByTitle(taskTitle)) {
+            taskRepository.deleteByTitle(taskTitle);
             return true;
         } else {
             return false; // Task not found
